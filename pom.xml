@@ -1,9 +1,110 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.5.7.RELEASE</version>
+  </parent>
   <groupId>org.solomsa</groupId>
   <artifactId>solomsa</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0</version>
   <packaging>pom</packaging>
   <name>solomsa</name>
   <description>solomsa</description>
+  <developers>
+    <developer>
+      <id>song.peng</id>
+      <name>Solomon Peng</name>
+      <email>1402312228@qq.com</email>
+      <roles>
+        <role>owner</role>
+        <role>developer</role>
+      </roles>
+    </developer>
+  </developers>  
+  <properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<java.version>1.8</java.version>
+		<spring-cloud.version>Dalston.SR3</spring-cloud.version>
+		<spring-cloud-kubernetes.version>0.2.0.RELEASE</spring-cloud-kubernetes.version>
+		<swagger.version>2.7.0</swagger.version>
+		<druid.version>1.1.4</druid.version>
+		<solomsa.version>1.0.0</solomsa.version>
+  </properties>
+  <dependencyManagement>
+  	<dependencies>
+  		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-dependencies</artifactId>
+			<version>${spring-cloud.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-kubernetes-dependencies</artifactId>
+			<version>${spring-cloud-kubernetes.version}</version>
+			<type>pom</type>
+			<scope>import</scope>
+		</dependency>
+		<dependency>
+    		<groupId>io.springfox</groupId>
+    		<artifactId>springfox-swagger2</artifactId>
+    		<version>${swagger.version}</version>
+		</dependency>
+		<dependency>
+    		<groupId>io.springfox</groupId>
+    		<artifactId>springfox-swagger-ui</artifactId>
+    		<version>${swagger.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>druid-spring-boot-starter</artifactId>
+			<version>${druid.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.solomsa</groupId>
+			<artifactId>solomsa-core</artifactId>
+			<version>${solomsa.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.solomsa</groupId>
+			<artifactId>solomsa-data</artifactId>
+			<version>${solomsa.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.solomsa</groupId>
+			<artifactId>solomsa-app</artifactId>
+			<version>${solomsa.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.solomsa</groupId>
+			<artifactId>solomsa-redis</artifactId>
+			<version>${solomsa.version}</version>
+		</dependency>
+	</dependencies>
+  </dependencyManagement>
+  <distributionManagement>
+	<repository>
+	  <id>nexus-releases</id>
+	  <name>Nexus Release Repository</name>
+	  <url>http://10.252.168.139:8081/nexus/content/repositories/releases/</url>
+	  <!-- <url>http://192.168.0.39:8081/nexus/content/repositories/releases/</url> -->
+	  <!-- <url>http://192.168.0.204:8081/repository/maven-releases/</url> -->
+	</repository>
+    <snapshotRepository>
+	  <id>nexus-snapshots</id>
+	  <name>Nexus Snapshot Repository</name>
+	  <url>http://10.252.168.139:8081/nexus/content/repositories/snapshots/</url>
+	  <!-- <url>http://192.168.0.39:8081/nexus/content/repositories/snapshots/</url> -->
+	  <!-- <url>http://192.168.0.204:8081/repository/maven-snapshots/</url> -->
+	</snapshotRepository> 
+  </distributionManagement>
+  <modules>
+  	<module>solomsa-core</module>
+  	<module>solomsa-app</module>
+  	<module>solomsa-data</module>
+  	<module>solomsa-redis</module>
+  </modules>
 </project>
