@@ -11,10 +11,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import org.hibernate.annotations.GenericGenerator;
-import org.springframework.util.StringUtils;
 
 import com.accenture.microservice.data.IdGenerator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -40,9 +38,4 @@ public abstract class AbstractUUIdTable extends AbstractAuditable<String> {
 	@Transient
 	private boolean deleted = false;
 	
-	@Override
-	@JsonIgnore
-	public boolean isNew() {
-		return !StringUtils.hasText(id);
-	}
 }

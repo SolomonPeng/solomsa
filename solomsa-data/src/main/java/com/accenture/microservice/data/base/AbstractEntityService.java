@@ -4,7 +4,12 @@
 package com.accenture.microservice.data.base;
 
 import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -17,23 +22,31 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QueryDslPredicateExecutor;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.accenture.microservice.core.util.CoreUtils;
 import com.accenture.microservice.core.vo.ResponseResult;
 import com.accenture.microservice.data.util.DataUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.core.types.dsl.SimpleExpression;
 
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**抽象实体增删改查服务类
@@ -43,16 +56,21 @@ import lombok.NonNull;
  * @param <T> 实体对象类型
  * @param <ID> 实体的ID类型
  */
+@Slf4j
 public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & QueryDslPredicateExecutor<T>,T extends Persistable<ID>,ID extends Serializable & Comparable<?>> extends AbstractService {
 
 	@Autowired(required=false)
 	@Getter
 	REPO repository;
+	@Getter @Setter
+	SimpleExpression<ID> idPath;
+	@Getter @Setter
+	EntityPathBase<T> qEntity;
 	
 	/**transPredicate方法需要使用该属性
 	 * 
 	 */
-	protected Map<String,Function<Object,BooleanExpression>> paramConfigMap = Maps.newHashMap();
+	protected Map<String,Function<Object,BooleanExpression>> paramConfigMap = Maps.newConcurrentMap();
 	
 	/**设置paramConfigs属性
 	 * 
@@ -61,6 +79,7 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 	
 	@PostConstruct
 	private void init() {
+		initQuerydslPropertis();
 		initParamConfigs();
 	}
 	
@@ -73,7 +92,26 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 	/**Q对象id表达式
 	 * @return
 	 */
-	protected abstract SimpleExpression<ID> idExpression();
+	protected SimpleExpression<ID> idExpression(){
+		return idPath;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void initQuerydslPropertis() {
+		try {
+			Type genType = this.getClass().getGenericSuperclass();
+			Type[] params = ((ParameterizedType) genType).getActualTypeArguments();
+			Class<T> clazz = (Class<T>) params[1];
+			String qClassName = clazz.getName().substring(0, clazz.getName().lastIndexOf(".")) + ".Q" + clazz.getSimpleName();
+			Class<?> qClazz = Class.forName(qClassName);
+			String qStaticName = StringUtils.uncapitalize(clazz.getSimpleName());
+			Field field = CoreUtils.getDeclaredField(qClazz, qStaticName);
+			qEntity = (EntityPathBase<T>) field.get(qClazz);
+			idPath = (SimpleExpression<ID>)CoreUtils.getProperty(qEntity,"id");
+		}catch(Exception ex) {
+			log.error("initQuerydslPropertis Error:", ex);
+		}		
+	}
 	
 	/**把Map对象转换成实体对象
 	 * @param map
@@ -83,8 +121,8 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 		return transObject(map,repository);
 	}
 	
-	/**根据man对象的值转换成查询条件,通过遍历自身paramConfigs属性实现
-	 * @param map
+	/**根据paramMap对象的值转换成查询条件,通过遍历自身paramConfigs属性实现
+	 * @param paramMap
 	 * @return
 	 */
 	protected Predicate transPredicate(@NonNull Map<String,Object> paramMap) {
@@ -121,6 +159,46 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 		Predicate predicate = transPredicate(paramsMap);
 		Sort sort = transSort(paramsMap);
 		return Lists.newArrayList(repository.findAll(predicate,sort));
+	}
+	
+	/**根据输入的查询参数查询一个对象
+	 * @param paramsMap
+	 * @return
+	 */
+	public T findOneByParams(@NonNull Map<String,Object> paramsMap) {
+		Predicate predicate = transPredicate(paramsMap);
+		Sort sort = transSort(paramsMap);
+		if(ObjectUtils.isEmpty(sort)) {
+			return this.getJpaQueryFactory().selectFrom(qEntity).where(predicate).fetchFirst();
+		}
+		OrderSpecifier<?>[] orders = transQdOrder(sort);
+		return this.getJpaQueryFactory().selectFrom(qEntity).where(predicate).orderBy(orders).fetchFirst();
+		
+	}
+	
+	private OrderSpecifier<?>[] transQdOrder(@NonNull Sort sort){
+		List<OrderSpecifier<?>> orders = Lists.newArrayList();
+		Iterator<Order> it = sort.iterator();
+		while(it.hasNext()) {
+			Order od = it.next();
+			try {
+				Expression<?> mixin = (Expression<?>) CoreUtils.getProperty(qEntity, od.getProperty());
+				Method oMethod = null;
+				if(od.isAscending()) {
+					oMethod = mixin.getClass().getMethod("asc");
+				}else if(od.isDescending()) {
+					oMethod = mixin.getClass().getMethod("desc");
+				}
+				if(null!=oMethod) {
+					orders.add((OrderSpecifier<?>) oMethod.invoke(mixin));
+				}
+			} catch (Exception e) {
+				log.error("transQdOrder error:", e);;
+			} 
+			
+		}
+		OrderSpecifier<?>[] result = new OrderSpecifier<?>[orders.size()];
+		return orders.toArray(result);
 	}
 	
 	/**根据输入的查询参数分页查询对象集合

@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.accenture.microservice.app.base.BaseApi;
 import com.accenture.microservice.core.GlobalConst;
 import com.accenture.microservice.core.util.CoreUtils;
-import com.accenture.microservice.data.base.AbstractEntityService;
 import com.google.common.collect.Lists;
 
 import io.swagger.annotations.ApiOperation;
@@ -42,30 +41,47 @@ public abstract class AbstractRestApi<SERVICE extends AbstractEntityService<?, T
 	@Getter
 	SERVICE service;
 	
-	/**根据id获取一个或一组对象
+	/**根据id获取一个对象
 	 * @param id
 	 * @return
 	 */
 	@ApiOperation("根据id查询")
     @GetMapping("/{id}")
-	public Object get(@PathVariable String id) {
+	public T get(@PathVariable String id) {
+		Assert.hasText(id, GlobalConst.NULL_ARGUMENT_MSG);
+		return service.findById(id);
+	}
+	
+	/**根据id获取一组对象
+	 * @param id
+	 * @return
+	 */
+	@ApiOperation("根据多个id查询多个对象")
+    @GetMapping("/ids/{id}")
+	public List<T> getIds(@PathVariable String id) {
 		Assert.hasText(id, GlobalConst.NULL_ARGUMENT_MSG);
 		String[] ids = StringUtils.commaDelimitedListToStringArray(id);
-		if (ids.length <= 1) {
-			return service.findById(ids[0]);
-		}else {
-			return service.findByIds(Arrays.asList(ids));
-		}
+		return service.findByIds(Arrays.asList(ids));
 	}
 	
 	/**根据参数查询记录集
-	 * @param map
+	 * @param paramsMap
 	 * @return
 	 */
 	@ApiOperation("根据字段参数查询")
 	@GetMapping
 	public List<T> get(@RequestParam @ApiIgnore Map<String, Object> paramsMap){
 		return service.findByParams(paramsMap);
+	}
+	
+	/**根据参数查询一个对象
+	 * @param paramsMap
+	 * @return
+	 */
+	@ApiOperation("根据字段参数查询一个对象")
+	@GetMapping("/single")
+	public T getSingle(@RequestParam @ApiIgnore Map<String, Object> paramsMap){
+		return service.findOneByParams(paramsMap);
 	}
 	
 	/**插入保存一个记录

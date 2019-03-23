@@ -13,6 +13,7 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -44,6 +45,7 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	private static final long serialVersionUID = 1L;
 	
 	static final String transactionIdKey = "transactionId";
+	static final String appContextClassPath = "com.accenture.microservice.app.context.AppContext";
 	
 	/** 用于存放后台程序计算需要保留的信息，譬如事务ID等 */
 	@Column(name = "EXTEND", length = 500)
@@ -68,6 +70,9 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	@LastModifiedDate
 	private Date updateDate;
 	
+	@Transient
+	private String extUpdateBy;
+	
 	/* (non-Javadoc)
 	 * @see org.springframework.data.domain.Persistable#getId()
 	 */
@@ -80,23 +85,23 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	@Override
 	@JsonIgnore
 	public boolean isNew() {
-		return !StringUtils.hasText(createBy);
+		return ObjectUtils.isEmpty(createDate);
 	}
 	
 	public void setTransactionId(String transactionId) {		
+		Map<String,Object> map = CoreUtils.toMap(extend);
 		if(!StringUtils.hasText(getTransactionId())) {
 			if(!StringUtils.hasText(transactionId)) {
 				return;
-			}			
+			}
+			map.put(transactionIdKey, transactionId);
 		}else {
-			Map<String,Object> map = CoreUtils.toMap(extend);
 			map.remove(transactionIdKey);
 			if(StringUtils.hasText(transactionId)) {
 				map.put(transactionIdKey, transactionId);
 			}
-			setExtend(CoreUtils.toString(map));
-			return;
 		}
+		setExtend(CoreUtils.toString(map));
 	}
 	
 	@JsonIgnore
@@ -113,7 +118,10 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 
 	@PrePersist
 	void prePersist() {
-		setCreateBy(ClassUtils.isPresent("com.accenture.microservice.app.context.AppContext", getClass().getClassLoader())?AppContext.getCurrentUser():GlobalConst.ANONYMOUS_USER);
+		if(!StringUtils.hasText(getCreateBy())) {
+			setCreateBy(ClassUtils.isPresent(appContextClassPath, getClass().getClassLoader())
+					?AppContext.getCurrentUser():GlobalConst.ANONYMOUS_USER);
+		}
 		setCreateDate(new Date());
 		setUpdateBy(getCreateBy());
 		setUpdateDate(getCreateDate());
@@ -121,7 +129,12 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	
 	@PreUpdate
 	void preUpdate() {
-		setUpdateBy(ClassUtils.isPresent("com.accenture.microservice.app.context.AppContext", getClass().getClassLoader())?AppContext.getCurrentUser():GlobalConst.ANONYMOUS_USER);
+		if(StringUtils.hasText(getExtUpdateBy())) {
+			setUpdateBy(getExtUpdateBy());
+		}else {
+			setUpdateBy(ClassUtils.isPresent(appContextClassPath, getClass().getClassLoader())
+					?AppContext.getCurrentUser():GlobalConst.ANONYMOUS_USER);
+		}
 		setUpdateDate(new Date());
 	}
 	
