@@ -19,24 +19,24 @@ import org.springframework.context.ApplicationEvent;
 
 /**
  * <p>
- * <b>AuditChangedEvent</b> 数据变化的审计事件
+ * <b>AuditUpdatedEvent</b> 数据变化的审计事件
  * </p>
  *
  * @author song.peng
  */
-public class AuditChangedEvent extends ApplicationEvent {
+public class AuditUpdatedEvent extends ApplicationEvent {
 
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * @param source
 	 */
-	public AuditChangedEvent(AuditChanged source) {
+	public AuditUpdatedEvent(UpdatedRecord source) {
 		super(source);
 	}
 
 	@Override
-	public AuditChanged getSource() {
-		return (AuditChanged) super.getSource();
+	public UpdatedRecord getSource() {
+		return (UpdatedRecord) super.getSource();
 	}
 }

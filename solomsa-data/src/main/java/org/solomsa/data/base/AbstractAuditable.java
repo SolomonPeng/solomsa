@@ -45,7 +45,7 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	private static final long serialVersionUID = 1L;
 	
 	static final String transactionIdKey = "transactionId";
-	static final String appContextClassPath = "com.accenture.microservice.app.context.AppContext";
+	static final String appContextClassPath = "org.solomsa.app.context.AppContext";
 	
 	/** 用于存放后台程序计算需要保留的信息，譬如事务ID等 */
 	@Column(name = "EXTEND", length = 500)
@@ -71,6 +71,7 @@ public abstract class AbstractAuditable<PK extends Serializable> implements Pers
 	private Date updateDate;
 	
 	@Transient
+	@JsonIgnore
 	private String extUpdateBy;
 	
 	/* (non-Javadoc)

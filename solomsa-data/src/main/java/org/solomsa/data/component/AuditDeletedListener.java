@@ -8,7 +8,7 @@ import java.util.Map;
 
 import org.solomsa.core.util.CoreUtils;
 import org.solomsa.data.domain.AuditLog;
-import org.solomsa.data.event.AuditDeleted;
+import org.solomsa.data.event.DeletedRecord;
 import org.solomsa.data.event.AuditDeletedEvent;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class AuditDeletedListener implements ApplicationListener<AuditDeletedEve
 	 * 实现该方法，获取所需的数据变化实体，以便做进一步操作
 	 * @param auditChanged
 	 */
-	protected void onAuditDeleted(AuditDeleted auditDeleted) {
+	protected void onAuditDeleted(DeletedRecord auditDeleted) {
 		AuditLog log = new AuditLog();
 		log.setBatchNo(auditDeleted.getBatchNo());
 		log.setClassName(auditDeleted.getClassName());

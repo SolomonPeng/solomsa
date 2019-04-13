@@ -19,8 +19,8 @@ package org.solomsa.data.component;
 import java.util.Date;
 
 import org.solomsa.data.domain.AuditLog;
-import org.solomsa.data.event.AuditChanged;
-import org.solomsa.data.event.AuditChangedEvent;
+import org.solomsa.data.event.UpdatedRecord;
+import org.solomsa.data.event.AuditUpdatedEvent;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
@@ -32,13 +32,13 @@ import org.springframework.stereotype.Component;
  * 修改记录的审计监听器
  */
 @Component
-public class AuditChangedListener implements ApplicationListener<AuditChangedEvent>,DisposableBean {
+public class AuditUpdatedListener implements ApplicationListener<AuditUpdatedEvent>,DisposableBean {
 
 	@Autowired
 	private AuditLogPersistence persistence;
 
 	@Override
-	public void onApplicationEvent(AuditChangedEvent auditChangedEvent) {
+	public void onApplicationEvent(AuditUpdatedEvent auditChangedEvent) {
 		onAuditChanged(auditChangedEvent.getSource());
 	}
 	
@@ -46,7 +46,7 @@ public class AuditChangedListener implements ApplicationListener<AuditChangedEve
 	 * 实现该方法，获取所需的数据变化实体，以便做进一步操作
 	 * @param auditChanged
 	 */
-	protected void onAuditChanged(AuditChanged auditChanged) {
+	protected void onAuditChanged(UpdatedRecord auditChanged) {
 		AuditLog log = new AuditLog();
 		log.setBatchNo(auditChanged.getBatchNo());
 		log.setClassName(auditChanged.getClassName());

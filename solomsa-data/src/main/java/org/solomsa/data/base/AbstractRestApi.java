@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import org.solomsa.app.base.BaseApi;
+import org.solomsa.app.base.AbstractApi;
 import org.solomsa.core.GlobalConst;
 import org.solomsa.core.util.CoreUtils;
 import org.solomsa.data.base.AbstractEntityService;
@@ -36,7 +36,7 @@ import springfox.documentation.annotations.ApiIgnore;
  * @param <T> 必须是以String为主键类型的实体类型
  */
 public abstract class AbstractRestApi<SERVICE extends AbstractEntityService<?, T, String>,T extends Persistable<String>> 
-	extends BaseApi {
+	extends AbstractApi {
 
 	@Autowired(required=false)
 	@Getter

@@ -25,7 +25,7 @@ import lombok.NonNull;
  */
 public class DataUtils {
 
-	/** 对实体对象非空或字段长度限制做校验
+	/** 对实体对象非空或字段长度限制做校验(字段长度目前JPA注解只支持以char做长度单位定义的字段不支持byte做长度单位)
 	 * @param entity 要校验的对象
 	 * @return ResponseResult 内包含的是可通过校验的对象
 	 */
@@ -71,26 +71,12 @@ public class DataUtils {
 				}
 				continue;
 			}
-			
+			//字段长度校验,只支持数据库定义的长度单位是char,如果是byte则无效
 			if(obj.toString().length()>column.length()) {
 				success = false;
 				message += "Length of "+field.getName()+" is too large. ";
 				CoreUtils.forceSetField(response, field.getName(), obj.toString().substring(0, column.length()));
 			}
-			/*int length = column.length();
-			String str;
-			try {
-				str = new String(obj.toString().getBytes("UTF-8"),"ISO-8859-1");
-				if(str.length()>length) {
-					success = false;
-					message += "Length of "+field.getName()+" is too large. ";
-					CoreUtils.forceSetField(response, field.getName(), new String(str.substring(0, length).getBytes("ISO-8859-1"),"UTF-8"));
-				}
-			} catch (UnsupportedEncodingException e) {
-				success = false;
-				message += field.getName()+" UnsupportedEncodingException " + e.getMessage();
-			}*/
-			
 		}
 		result.setSuccess(success);
 		result.setMessage(message);

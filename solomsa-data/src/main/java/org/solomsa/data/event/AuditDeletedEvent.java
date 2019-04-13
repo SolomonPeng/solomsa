@@ -31,12 +31,12 @@ public class AuditDeletedEvent extends ApplicationEvent {
 	/**
 	 * @param source
 	 */
-	public AuditDeletedEvent(AuditDeleted source) {
+	public AuditDeletedEvent(DeletedRecord source) {
 		super(source);
 	}
 
 	@Override
-	public AuditDeleted getSource() {
-		return (AuditDeleted) super.getSource();
+	public DeletedRecord getSource() {
+		return (DeletedRecord) super.getSource();
 	}
 }

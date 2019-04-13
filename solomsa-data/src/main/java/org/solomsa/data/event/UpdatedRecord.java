@@ -22,35 +22,38 @@ import lombok.Data;
 
 /**
  * <p>
- * <b>DeletedRecord</b> 数据删除实体
+ * <b>UpdatedRecord</b> 数据变化实体
  * </p>
  *
  * @author song.peng
  */
 @Data
-public class AuditDeleted implements Serializable {
+public class UpdatedRecord implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	/** 变化的表名 */
 	private String tableName;
-	
+
 	/** 变化的类名 */
 	private String className;
 
 	/** 变化的数据ID */
 	private String dataId;
 
+	/** 变化前的数据 */
+	private Object oldValue;
+
+	/** 变化后的数据 */
+	private Object newValue;
+
 	/**变化批次*/
 	private String batchNo;
-	
-	/**实体内容*/
-	private String content;
 
 	/** 变更人 */
 	private String modifiedBy;
 
-	/** 变化的实体 */
+	/** 实体 */
 	private Object entity;
 	
 }

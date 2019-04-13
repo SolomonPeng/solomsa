@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface AuditChange {
+public @interface AuditUpdate {
 	boolean value() default true;
 }

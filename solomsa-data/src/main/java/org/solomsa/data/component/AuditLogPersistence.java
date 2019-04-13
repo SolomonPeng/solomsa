@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 
 
 /**
- * <p> <b>DataChangedPersistence</b> 是持久化类. </p>
+ * <p> <b>AuditLogPersistence</b> 是持久化类. </p>
  * 
  * @since 2011-4-11
  * @author song.peng
