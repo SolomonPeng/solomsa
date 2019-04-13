@@ -11,23 +11,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.accenture.microservice.core.util.CoreUtils;
 import com.accenture.microservice.core.vo.ResponseResult;
 
+import lombok.extern.slf4j.Slf4j;
+
 /** Controller基类
  * @author song.peng
  *
  */
+@Slf4j
 public abstract class AbstractController {
 	
 	@ExceptionHandler(Exception.class)
-	public String exceptionHandler(Exception ex, HttpServletRequest request,HttpServletResponse response) {
+	public void exceptionHandler(Exception ex, HttpServletRequest request,HttpServletResponse response) {
 		ResponseResult<Object> result = new ResponseResult<Object>();		
 		result.setSuccess(false);
 		result.setMessage(ex.getMessage());
 		try {
 			response.getWriter().write(CoreUtils.toString(result));
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("exceptionHandler:", e);
 		}
-		return "";
 	}
 	
 	public <T> ResponseResult<T> processResponse(T obj){
@@ -40,14 +42,5 @@ public abstract class AbstractController {
         result.setSuccess(isSucess);
 		return result;
 	}
-	
-	public String toJson(Object value) {
-		try {
-			return CoreUtils.toString(value);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}	
-	
+		
 }

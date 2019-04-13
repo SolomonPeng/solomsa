@@ -465,8 +465,9 @@ public class CoreUtils {
 	 * @param key
 	 * @return
 	 */
-	public static Object optionalMap(Map<String,Object> map,String key, Object... defaultValue ) {
-		Object defaultObject= new Object();
+	@SafeVarargs
+	public static <T> T optionalMap(Map<String,T> map,String key, T... defaultValue ) {
+		T defaultObject = null;
 		if(!ObjectUtils.isEmpty(defaultValue)) {
 			defaultObject = defaultValue[0];
 		}

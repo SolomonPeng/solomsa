@@ -6,8 +6,8 @@ package com.accenture.microservice.data.base;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -35,6 +35,7 @@ import com.accenture.microservice.core.vo.ResponseResult;
 import com.accenture.microservice.data.util.DataUtils;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.querydsl.core.types.EntityPath;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.OrderSpecifier;
@@ -65,7 +66,7 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 	@Getter @Setter
 	SimpleExpression<ID> idPath;
 	@Getter @Setter
-	EntityPathBase<T> qEntity;
+	EntityPath<T> qEntity;
 	
 	/**transPredicate方法需要使用该属性
 	 * 
@@ -89,12 +90,6 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 		}
 	}
 	
-	/**Q对象id表达式
-	 * @return
-	 */
-	protected SimpleExpression<ID> idExpression(){
-		return idPath;
-	}
 	
 	@SuppressWarnings("unchecked")
 	private void initQuerydslPropertis() {
@@ -106,8 +101,8 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 			Class<?> qClazz = Class.forName(qClassName);
 			String qStaticName = StringUtils.uncapitalize(clazz.getSimpleName());
 			Field field = CoreUtils.getDeclaredField(qClazz, qStaticName);
-			qEntity = (EntityPathBase<T>) field.get(qClazz);
-			idPath = (SimpleExpression<ID>)CoreUtils.getProperty(qEntity,"id");
+			setQEntity((EntityPathBase<T>) field.get(qClazz));
+			setIdPath((SimpleExpression<ID>)CoreUtils.getProperty(getQEntity(),"id"));
 		}catch(Exception ex) {
 			log.error("initQuerydslPropertis Error:", ex);
 		}		
@@ -148,7 +143,7 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 	 * @return
 	 */
 	public List<T> findByIds(Collection<ID> ids){
-		return Lists.newArrayList(repository.findAll(idExpression().in(ids)));
+		return Lists.newArrayList(repository.findAll(getIdPath().in(ids)));
 	}
 	
 	/**根据输入的查询参数查询对象集合
@@ -169,24 +164,28 @@ public abstract class AbstractEntityService<REPO extends JpaRepository<T, ID> & 
 		Predicate predicate = transPredicate(paramsMap);
 		Sort sort = transSort(paramsMap);
 		if(ObjectUtils.isEmpty(sort)) {
-			return this.getJpaQueryFactory().selectFrom(qEntity).where(predicate).fetchFirst();
+			return this.getJpaQueryFactory().selectFrom(getQEntity()).where(predicate).fetchFirst();
 		}
 		OrderSpecifier<?>[] orders = transQdOrder(sort);
-		return this.getJpaQueryFactory().selectFrom(qEntity).where(predicate).orderBy(orders).fetchFirst();
+		return this.getJpaQueryFactory().selectFrom(getQEntity()).where(predicate).orderBy(orders).fetchFirst();
 		
 	}
 	
-	private OrderSpecifier<?>[] transQdOrder(@NonNull Sort sort){
+	/** 把JPA的Sort对象转换成Querydsl的OrderSpecifier对象
+	 * @param sort
+	 * @return
+	 */
+	public OrderSpecifier<?>[] transQdOrder(@NonNull Sort sort){
 		List<OrderSpecifier<?>> orders = Lists.newArrayList();
 		Iterator<Order> it = sort.iterator();
 		while(it.hasNext()) {
-			Order od = it.next();
+			Order order = it.next();
 			try {
-				Expression<?> mixin = (Expression<?>) CoreUtils.getProperty(qEntity, od.getProperty());
+				Expression<?> mixin = (Expression<?>) CoreUtils.getProperty(getQEntity(), order.getProperty());
 				Method oMethod = null;
-				if(od.isAscending()) {
+				if(order.isAscending()) {
 					oMethod = mixin.getClass().getMethod("asc");
-				}else if(od.isDescending()) {
+				}else if(order.isDescending()) {
 					oMethod = mixin.getClass().getMethod("desc");
 				}
 				if(null!=oMethod) {

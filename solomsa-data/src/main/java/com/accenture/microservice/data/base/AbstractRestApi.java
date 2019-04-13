@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.accenture.microservice.app.base.BaseApi;
 import com.accenture.microservice.core.GlobalConst;
 import com.accenture.microservice.core.util.CoreUtils;
+import com.accenture.microservice.data.base.AbstractEntityService;
 import com.google.common.collect.Lists;
 
 import io.swagger.annotations.ApiOperation;
@@ -45,7 +46,7 @@ public abstract class AbstractRestApi<SERVICE extends AbstractEntityService<?, T
 	 * @param id
 	 * @return
 	 */
-	@ApiOperation("根据id查询")
+	@ApiOperation("根据id查询一个对象")
     @GetMapping("/{id}")
 	public T get(@PathVariable String id) {
 		Assert.hasText(id, GlobalConst.NULL_ARGUMENT_MSG);
